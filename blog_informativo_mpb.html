@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinfonia Tropical - O Portal da MPB</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Fira+Code:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mpb: {
+                            red: '#E53E3E',       /* Cor principal */
+                            redDark: '#9B2C2C',
+                            green: '#2F855A',     /* Verde complementar */
+                            greenLight: '#48BB78',
+                            yellow: '#D69E2E',    /* Amarelo complementar */
+                            yellowLight: '#ECC94B',
+                            darkBg: '#0F172A',
+                            darkCard: '#1E293B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos Personalizados e Animações */
+        .stage-lighting-mode {
+            background: radial-gradient(circle at 50% -20%, #E53E3E 0%, #1E1B4B 40%, #0F172A 80%) !important;
+            color: #F8FAFC !important;
+        }
+
+        .stage-lighting-card {
+            background: rgba(30, 41, 59, 0.7) !important;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(229, 62, 62, 0.4) !important;
+            box-shadow: 0 0 25px rgba(229, 62, 62, 0.25), 0 0 10px rgba(214, 158, 46, 0.15) !important;
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-vinyl {
+            animation: spin-slow 8s linear infinite;
+        }
+
+        .paused {
+            animation-play-state: paused;
+        }
+
+        /* Ambient Lights Glow Effects */
+        .spotlight-red {
+            position: fixed;
+            top: -100px;
+            left: 20%;
+            width: 300px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(229,62,62,0.3) 0%, rgba(0,0,0,0) 100%);
+            transform: rotate(-15deg);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(30px);
+            display: none;
+        }
+
+        .spotlight-green {
+            position: fixed;
+            top: -100px;
+            right: 20%;
+            width: 300px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(47,133,90,0.25) 0%, rgba(0,0,0,0) 100%);
+            transform: rotate(15deg);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(30px);
+            display: none;
+        }
+
+        .stage-lighting-mode .spotlight-red,
+        .stage-lighting-mode .spotlight-green {
+            display: block;
+            animation: pulse-lights 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-lights {
+            0% { opacity: 0.4; transform: rotate(-12deg) scaleY(1); }
+            100% { opacity: 0.8; transform: rotate(-18deg) scaleY(1.1); }
+        }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e53e3e;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-mpb-darkBg text-gray-800 dark:text-gray-100 transition-colors duration-500 min-h-screen font-sans flex flex-col relative overflow-x-hidden" id="app-body">
+
+    <!-- Luzes de Palco do Efeito Maria Kustovichi -->
+    <div class="spotlight-red"></div>
+    <div class="spotlight-green"></div>
+
+    <!-- Canvas de Fundo Reativo (Partículas e Ondas de Som) -->
+    <canvas id="bg-canvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+    <!-- Barra de Navegação -->
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-mpb-darkBg/80 border-b border-gray-200 dark:border-gray-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-mpb-red flex items-center justify-center text-white text-xl shadow-lg shadow-mpb-red/40">
+                    <i class="fa-solid font-bold fa-compact-disc animate-spin-slow"></i>
+                </div>
+                <div>
+                    <span class="font-serif text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        Sinfonia<span class="text-mpb-red">MPB</span>
+                    </span>
+                    <span class="block text-[10px] tracking-widest text-mpb-yellow uppercase font-semibold">Música Popular Brasileira</span>
+                </div>
+            </div>
+
+            <!-- Navegação Desktop -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-semibold">
+                <a href="#hero" class="hover:text-mpb-red transition-colors">Início</a>
+                <a href="#eras" class="hover:text-mpb-red transition-colors">Eras da MPB</a>
+                <a href="#vscode-section" class="hover:text-mpb-red transition-colors flex items-center gap-1.5">
+                    <i class="fa-brands fa-square-js text-mpb-yellow"></i> Dev MPB
+                </a>
+                <a href="#artigos" class="hover:text-mpb-red transition-colors">Artigos</a>
+                <a href="#artistas" class="hover:text-mpb-red transition-colors">Artistas</a>
+                <a href="#quiz" class="hover:text-mpb-red transition-colors">Quiz MPB</a>
+            </nav>
+
+            <!-- Barra de Busca & Seletor de Iluminação / Tema -->
+            <div class="flex items-center gap-4">
+                <!-- Search Box -->
+                <div class="relative hidden sm:block">
+                    <input type="text" id="search-input" placeholder="Buscar artista ou ritmo..." class="w-48 lg:w-64 pl-9 pr-4 py-1.5 text-sm bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-full focus:outline-none focus:ring-2 focus:ring-mpb-red text-gray-800 dark:text-gray-200">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                </div>
+
+                <!-- Theme Switcher Dropdown (Inclui Motor Maria Kustovichi) -->
+                <div class="relative inline-block text-left">
+                    <button id="theme-btn" onclick="toggleThemeMenu()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg border border-mpb-red/30 bg-mpb-red/10 text-mpb-red hover:bg-mpb-red hover:text-white transition-all shadow-sm">
+                        <i id="theme-icon" class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span id="theme-label" class="hidden md:inline">Modo Palco</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+
+                    <!-- Menu de Temas -->
+                    <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 z-50 overflow-hidden py-1">
+                        <div class="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 dark:border-slate-700">
+                            Modos de Iluminação
+                        </div>
+                        <button onclick="setTheme('light')" class="w-full text-left px-4 py-2 text-xs flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-slate-700">
+                            <i class="fa-solid fa-sun text-mpb-yellow w-4"></i> Claro (Dia de Bossa)
+                        </button>
+                        <button onclick="setTheme('dark')" class="w-full text-left px-4 py-2 text-xs flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-slate-700">
+                            <i class="fa-solid fa-moon text-indigo-400 w-4"></i> Escuro (Serenata)
+                        </button>
+                        <button onclick="setTheme('stage')" class="w-full text-left px-4 py-2 text-xs flex items-center gap-2 bg-mpb-red/10 text-mpb-red font-semibold hover:bg-mpb-red/20">
+                            <i class="fa-solid fa-compact-disc text-mpb-red w-4"></i> Palco Maria Kustovichi
+                        </button>
+                        <div class="px-3 py-1.5 text-[9px] text-gray-400 bg-gray-50 dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 italic">
+                            Motor de Luz por <span class="font-bold text-mpb-red">Maria Kustovichi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-grow z-10 relative">
+
+        <!-- HERO SECTION com Player de Vinil Dinâmico -->
+        <section id="hero" class="py-12 lg:py-20 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <div class="lg:col-span-7 space-y-6">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-mpb-green/10 border border-mpb-green/30 text-mpb-green text-xs font-bold uppercase tracking-wider">
+                    <span class="w-2 h-2 rounded-full bg-mpb-green animate-ping"></span>
+                    Patrimônio Cultural da Música Mundial
+                </div>
+                
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-serif font-extrabold leading-tight">
+                    A Alma e o Ritmo da <span class="text-transparent bg-clip-text bg-gradient-to-r from-mpb-red via-mpb-yellow to-mpb-green">Música Brasileira</span>
+                </h1>
+                
+                <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg max-w-2xl">
+                    Da sofisticação harmônica da Bossa Nova às revoluções poéticas da Tropicália. Explore a história, os algoritmos musicais e as biografias dos mestres que moldaram nossa identidade.
+                </p>
+
+                <!-- Cards de Estatísticas -->
+                <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-slate-800">
+                    <div>
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-mpb-red">1960+</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Década de Ouro</span>
+                    </div>
+                    <div>
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-mpb-green">500+</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Obras-Primas</span>
+                    </div>
+                    <div>
+                        <span class="block text-2xl sm:text-3xl font-extrabold text-mpb-yellow">100%</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Sincopado Nacional</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Vinyl Player Widget -->
+            <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                <div class="relative w-72 h-72 sm:w-80 sm:h-80 bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-700 flex flex-col items-center justify-between stage-card">
+                    <!-- Disputa Visual: Disco de Vinil -->
+                    <div class="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center">
+                        <!-- Brilho no vinil -->
+                        <div id="vinyl-disk" class="w-full h-full rounded-full bg-gradient-to-tr from-black via-gray-900 to-slate-800 border-4 border-slate-700 shadow-xl flex items-center justify-center relative animate-vinyl paused">
+                            <!-- Ranhuras do vinil -->
+                            <div class="absolute inset-2 rounded-full border border-gray-800 opacity-60"></div>
+                            <div class="absolute inset-6 rounded-full border border-gray-800 opacity-60"></div>
+                            <div class="absolute inset-10 rounded-full border border-gray-800 opacity-60"></div>
+                            <!-- Rótulo Central -->
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-mpb-red flex items-center justify-center text-white border-4 border-yellow-500 text-center p-1">
+                                <span class="text-[8px] font-bold uppercase leading-none">Águas de Março</span>
+                            </div>
+                        </div>
+                        <!-- Braço do Toca-Discos -->
+                        <div id="tone-arm" class="absolute -top-2 -right-2 w-16 h-24 border-r-4 border-t-4 border-gray-400 rounded-tr-full transform rotate-12 transition-transform duration-500 origin-top-right"></div>
+                    </div>
+
+                    <!-- Controles do Player Simulado -->
+                    <div class="w-full space-y-2 text-center mt-2">
+                        <div class="text-xs font-bold text-gray-200 truncate" id="player-title">Tom Jobim & Elis Regina - Águas de Março</div>
+                        <div class="text-[10px] text-mpb-yellow font-mono" id="player-chord">Acorde Atual: Bm7(9) -> E7(13)</div>
+                        
+                        <div class="flex items-center justify-center gap-4 pt-1">
+                            <button onclick="prevTrack()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-backward-step"></i></button>
+                            <button id="play-btn" onclick="togglePlay()" class="w-10 h-10 rounded-full bg-mpb-red text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-play text-sm"></i>
+                            </button>
+                            <button onclick="nextTrack()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-forward-step"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO TIMELINE DAS ERAS DA MPB -->
+        <section id="eras" class="py-12 bg-white/50 dark:bg-slate-900/50 border-y border-gray-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-10">
+                    <h2 class="text-3xl font-serif font-bold text-gray-900 dark:text-white">Linha do Tempo Harmônica</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">Filtre pelas épocas marcantes e compreenda a evolução estética do Brasil.</p>
+                </div>
+
+                <!-- Filtros de Era -->
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8" id="era-filters">
+                    <button onclick="filterEra('all')" class="era-btn active px-4 py-2 rounded-full text-xs font-bold bg-mpb-red text-white shadow-md">Todas</button>
+                    <button onclick="filterEra('bossa')" class="era-btn px-4 py-2 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-800 hover:bg-mpb-yellow hover:text-white transition-colors">Anos 50/60: Bossa Nova</button>
+                    <button onclick="filterEra('tropicalia')" class="era-btn px-4 py-2 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-800 hover:bg-mpb-green hover:text-white transition-colors">Anos 60/70: Tropicália</button>
+                    <button onclick="filterEra('engajada')" class="era-btn px-4 py-2 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-800 hover:bg-mpb-red hover:text-white transition-colors">Anos 70: MPB Engajada</button>
+                    <button onclick="filterEra('moderna')" class="era-btn px-4 py-2 rounded-full text-xs font-bold bg-gray-200 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white transition-colors">Anos 80+: Nova Geração</button>
+                </div>
+
+                <!-- Timeline Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="era-cards-container">
+                    <!-- Gerado Dinamicamente via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO CÓDIGOS VS CODE (Mapeamento de Algoritmos Rítmicos e Acordes) -->
+        <section id="vscode-section" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 text-mpb-yellow font-mono text-xs font-bold uppercase mb-1">
+                        <i class="fa-solid fa-code"></i> Arquitetura Musical Digital
+                    </div>
+                    <h2 class="text-3xl font-serif font-bold">Algoritmos & Teorias da MPB em JS</h2>
+                </div>
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-md">
+                    Analise os códigos de processamento da batida sincopada do Samba e Gerador de Harmonia no formato editor VS Code.
+                </p>
+            </div>
+
+            <!-- VS CODE SIMULATOR WINDOW -->
+            <div class="rounded-xl overflow-hidden shadow-2xl border border-slate-700 bg-[#1e1e1e] text-gray-300 font-mono text-sm">
+                
+                <!-- Barra Superior do VS Code -->
+                <div class="bg-[#252526] px-4 py-2.5 flex items-center justify-between border-b border-[#333333]">
+                    <div class="flex items-center gap-2">
+                        <!-- Botões de Controle da Janela Mac/Linux -->
+                        <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+                        <span class="text-xs text-gray-400 ml-2 font-sans font-medium">mpb-sound-engine — Visual Studio Code</span>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-xs text-gray-400">
+                        <button onclick="copyCode()" class="hover:text-white flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded border border-slate-700">
+                            <i class="fa-regular fa-copy"></i> Copiar Código
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Abas do VS Code -->
+                <div class="flex bg-[#2d2d2d] border-b border-[#333333] text-xs">
+                    <button onclick="switchTab('sambaBeat')" id="tab-sambaBeat" class="code-tab active bg-[#1e1e1e] text-white px-4 py-2.5 flex items-center gap-2 border-t-2 border-mpb-red">
+                        <i class="fa-brands fa-js text-yellow-400"></i> BossaSambaBeat.js
+                    </button>
+                    <button onclick="switchTab('harmonyGen')" id="tab-harmonyGen" class="code-tab bg-[#2d2d2d] text-gray-400 px-4 py-2.5 flex items-center gap-2 hover:text-gray-200">
+                        <i class="fa-brands fa-js text-yellow-400"></i> MPBHarmonies.js
+                    </button>
+                </div>
+
+                <!-- Área de Exibição de Código com Linhas -->
+                <div class="p-4 overflow-x-auto relative">
+                    <!-- Código 1: Batida Bossa Nova -->
+                    <pre id="code-sambaBeat" class="text-xs sm:text-sm leading-relaxed"><code class="language-javascript">
+<span class="text-purple-400">class</span> <span class="text-yellow-300">BossaNovaRhythmEngine</span> {
+    <span class="text-blue-400">constructor</span>(bpm = <span class="text-green-400">120</span>) {
+        <span class="text-red-400">this</span>.bpm = bpm;
+        <span class="text-red-400">this</span>.syncopationPattern = [<span class="text-green-400">1</span>, <span class="text-green-400">0</span>, <span class="text-green-400">0</span>, <span class="text-green-400">1</span>, <span class="text-green-400">0</span>, <span class="text-green-400">1</span>, <span class="text-green-400">1</span>, <span class="text-green-400">0</span>]; <span class="text-gray-500">// Batida Tamborim/Violão João Gilberto</span>
+    }
+
+    <span class="text-blue-400">generateBossaGroove</span>(audioCtx) {
+        <span class="text-purple-400">const</span> sixteenthNoteTime = (<span class="text-green-400">60</span> / <span class="text-red-400">this</span>.bpm) / <span class="text-green-400">4</span>;
+        
+        <span class="text-red-400">this</span>.syncopationPattern.<span class="text-blue-300">forEach</span>((accent, index) => {
+            <span class="text-purple-400">if</span> (accent) {
+                <span class="text-purple-400">const</span> osc = audioCtx.<span class="text-blue-300">createOscillator</span>();
+                <span class="text-purple-400">const</span> gain = audioCtx.<span class="text-blue-300">createGain</span>();
+                osc.frequency.value = <span class="text-green-400">220.0</span>; <span class="text-gray-500">// Frequência Lá 2 (A3)</span>
+                gain.gain.setValueAtTime(<span class="text-green-400">0.8</span>, audioCtx.currentTime + index * sixteenthNoteTime);
+                osc.<span class="text-blue-300">connect</span>(gain);
+                gain.<span class="text-blue-300">connect</span>(audioCtx.destination);
+            }
+        });
+        <span class="text-purple-400">return</span> <span class="text-green-300">"Ritmo Batida João Gilberto Sintetizado com Sucesso!"</span>;
+    }
+}
+                    </code></pre>
+
+                    <!-- Código 2: Harmonia MPB -->
+                    <pre id="code-harmonyGen" class="hidden text-xs sm:text-sm leading-relaxed"><code class="language-javascript">
+<span class="text-purple-400">const</span> <span class="text-yellow-300">mpbChordProgressions</span> = {
+    <span class="text-blue-300">bossaNovaStandard</span>: [<span class="text-green-300">"Cmaj7"</span>, <span class="text-green-300">"C#dim"</span>, <span class="text-green-300">"Dm7"</span>, <span class="text-green-300">"G7(b9)"</span>],
+    <span class="text-blue-300">tropicaliaPsychedelic</span>: [<span class="text-green-300">"A"</span>, <span class="text-green-300">"G/A"</span>, <span class="text-green-300">"D/A"</span>, <span class="text-green-300">"F"</span>, <span class="text-green-300">"E7"</span>],
+    <span class="text-blue-300">sambaCanção</span>: [<span class="text-green-300">"Am7"</span>, <span class="text-green-300">"Bm7(b5)"</span>, <span class="text-green-300">"E7(b9)"</span>, <span class="text-green-300">"Am6"</span>]
+};
+
+<span class="text-purple-400">function</span> <span class="text-blue-400">analyzeMPBSubstitutions</span>(chord) {
+    <span class="text-gray-500">// Adiciona extensões de 9ª e 13ª típicas da Bossa Nova</span>
+    <span class="text-purple-400">if</span> (chord.<span class="text-blue-300">includes</span>(<span class="text-green-300">"7"</span>)) {
+        <span class="text-purple-400">return</span> `${chord} <span class="text-gray-500">-> Adicionado (9, 13) para Sofisticação Jobim`</span>;
+    }
+    <span class="text-purple-400">return</span> chord;
+}
+                    </code></pre>
+                </div>
+
+                <!-- Barra de Status Inferior do VS Code -->
+                <div class="bg-[#007acc] text-white px-3 py-1 text-[11px] flex justify-between items-center font-sans">
+                    <div class="flex items-center gap-3">
+                        <span><i class="fa-solid fa-code-branch"></i> main</span>
+                        <span><i class="fa-solid fa-xmark-circle"></i> 0</span>
+                        <span><i class="fa-solid fa-warning"></i> 0</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span>UTF-8</span>
+                        <span>JavaScript</span>
+                        <span>Maria Kustovichi Engine Active</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO ARTIGOS DO BLOG -->
+        <section id="artigos" class="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-3xl font-serif font-bold">Artigos Informativos & Ensaios</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Análises detalhadas sobre movimentos, censura e poesia.</p>
+                </div>
+            </div>
+
+            <!-- Grid de Artigos -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="articles-grid">
+                <!-- Gerado por JS -->
+            </div>
+        </section>
+
+        <!-- SEÇÃO SHOWCASE DE ARTISTAS -->
+        <section id="artistas" class="py-12 bg-gray-100 dark:bg-slate-800/60 border-t border-gray-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-2xl mx-auto mb-10">
+                    <h2 class="text-3xl font-serif font-bold">Ícones Inesquecíveis</h2>
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">Conheça as vozes e mentes por trás do cancioneiro popular.</p>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="artists-grid">
+                    <!-- Gerado Dinamicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO INTERATIVA: QUIZ DA MPB -->
+        <section id="quiz" class="py-16 max-w-4xl mx-auto px-4">
+            <div class="bg-gradient-to-br from-slate-900 to-mpb-darkBg border border-mpb-red/30 rounded-3xl p-6 sm:p-10 shadow-2xl text-white text-center relative overflow-hidden stage-card">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-serif font-bold">MPB</div>
+                
+                <span class="inline-block px-3 py-1 rounded-full bg-mpb-yellow/20 text-mpb-yellow text-xs font-bold uppercase tracking-wider mb-3">Quiz Interativo</span>
+                <h2 class="text-2xl sm:text-3xl font-serif font-bold mb-4">Qual Era da MPB Combina Com Você?</h2>
+                <p class="text-xs sm:text-sm text-gray-300 mb-8 max-w-lg mx-auto">Responda à pergunta abaixo e descubra sua afinidade musical!</p>
+
+                <!-- Conteúdo do Quiz -->
+                <div id="quiz-container" class="space-y-4 max-w-md mx-auto text-left">
+                    <p class="font-semibold text-sm sm:text-base text-gray-200" id="quiz-question">O que você mais busca em uma música?</p>
+                    <div class="space-y-2.5" id="quiz-options">
+                        <button onclick="answerQuiz('bossa')" class="w-full text-left p-3.5 rounded-xl bg-slate-800 hover:bg-mpb-red/30 border border-slate-700 transition-all text-xs sm:text-sm">
+                            <span class="font-bold text-mpb-yellow">A)</span> Sofisticação, calma e um violão suave à beira-mar.
+                        </button>
+                        <button onclick="answerQuiz('tropicalia')" class="w-full text-left p-3.5 rounded-xl bg-slate-800 hover:bg-mpb-red/30 border border-slate-700 transition-all text-xs sm:text-sm">
+                            <span class="font-bold text-mpb-green">B)</span> Mistura psicodélica, guitarras elétricas e experimentação.
+                        </button>
+                        <button onclick="answerQuiz('engajada')" class="w-full text-left p-3.5 rounded-xl bg-slate-800 hover:bg-mpb-red/30 border border-slate-700 transition-all text-xs sm:text-sm">
+                            <span class="font-bold text-mpb-red">C)</span> Letras poéticas de protesto, história e engajamento social.
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resultado do Quiz (Oculto Inicialmente) -->
+                <div id="quiz-result" class="hidden space-y-4">
+                    <div class="w-16 h-16 rounded-full bg-mpb-yellow text-slate-900 mx-auto flex items-center justify-center text-2xl font-bold">
+                        <i class="fa-solid fa-music"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-mpb-yellow" id="result-title">Sua era é: Bossa Nova!</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed max-w-md mx-auto" id="result-desc">
+                        Você aprecia a elegância dos acordes invertidos e o lirismo sutil de Tom Jobim e Vinicius de Moraes.
+                    </p>
+                    <button onclick="resetQuiz()" class="px-5 py-2 rounded-full bg-mpb-red text-white text-xs font-bold hover:bg-mpb-redDark transition-colors">
+                        Refazer Quiz
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- CRÉDITOS E RODAPÉ -->
+    <footer class="bg-slate-950 text-gray-400 py-10 border-t border-slate-800 z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+            
+            <div>
+                <span class="font-serif text-lg font-bold text-white">Sinfonia<span class="text-mpb-red">MPB</span></span>
+                <p class="text-xs text-gray-500 mt-1">Preservando e digitalizando a história da Música Popular Brasileira.</p>
+            </div>
+
+            <!-- CRÉDITO ESPECIAL OBRIGATÓRIO MARIA KUSTOVICHI -->
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-mpb-red/20 text-mpb-red flex items-center justify-center">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <div class="text-left text-xs">
+                    <span class="block text-gray-200 font-semibold">Tecnologia de Iluminação & Temas</span>
+                    <span class="text-gray-500">Desenvolvido por <strong class="text-mpb-yellow">Maria Kustovichi</strong></span>
+                </div>
+            </div>
+
+            <div class="text-xs text-gray-500">
+                &copy; 2026 Sinfonia MPB. Feito com amor e ritmo.
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL DE LEITURA DE ARTIGO COMPLETO -->
+    <div id="article-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div id="modal-content">
+                <!-- Preenchido dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT DO SISTEMA -->
+    <script>
+        // --- DADOS DA APLICAÇÃO ---
+        const eraData = [
+            {
+                id: 'bossa',
+                title: 'Bossa Nova',
+                years: '1957 - 1966',
+                color: 'mpb-yellow',
+                badgeBg: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+                desc: 'Surgida no Rio de Janeiro, uniu a cadência do samba à sofisticação do jazz.',
+                keyArtists: 'João Gilberto, Tom Jobim, Vinicius de Moraes'
+            },
+            {
+                id: 'tropicalia',
+                title: 'Tropicália',
+                years: '1967 - 1969',
+                color: 'mpb-green',
+                badgeBg: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+                desc: 'Movimento de vanguarda que fundiu guitarras elétricas, cultura pop e folclore.',
+                keyArtists: 'Caetano Veloso, Gilberto Gil, Os Mutantes, Gal Costa'
+            },
+            {
+                id: 'engajada',
+                title: 'MPB Engajada & Protesto',
+                years: '1970 - 1979',
+                color: 'mpb-red',
+                badgeBg: 'bg-red-500/10 text-red-500 border-red-500/30',
+                desc: 'Músicas com duplos sentidos poéticos para desafiar a censura da época.',
+                keyArtists: 'Chico Buarque, Elis Regina, Milton Nascimento, Geraldo Vandré'
+            },
+            {
+                id: 'moderna',
+                title: 'Nova Geração & Fusões',
+                years: '1980 - Presente',
+                color: 'indigo-500',
+                badgeBg: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/30',
+                desc: 'Encontro da MPB tradicional com o Pop, Rock, Samba-Reggae e Nova MPB.',
+                keyArtists: 'Djavan, Marisa Monte, Lenine, Liniker, Céu'
+            }
+        ];
+
+        const articlesData = [
+            {
+                id: 1,
+                title: "A Revolução da Batida de João Gilberto",
+                tag: "Bossa Nova",
+                readTime: "5 min",
+                likes: 142,
+                snippet: "Como a mão direita de João Gilberto alterou para sempre a forma de se tocar violão no planeta.",
+                fullText: "A Bossa Nova não foi apenas uma mudança melódica, mas sim uma revolução rítmica. João Gilberto simplificou a marcação do surdo do samba na mão esquerda do violão, enquanto a mão direita trazia a síncope do tamborim. Essa batida minimalista criou um espaço harmônico perfeito para cantar baixinho, quase como um sussurro."
+            },
+            {
+                id: 2,
+                title: "Tropicália: A Antropofagia Sonora de 1968",
+                tag: "Tropicália",
+                readTime: "7 min",
+                likes: 218,
+                snippet: "O manifesto cultural que misturou arranjos eruditos de Rogério Duprat com guitarras psicodélicas.",
+                fullText: "A Tropicália assimilou referências estrangeiras (como Os Beatles) e fundiu com o baião, a ciranda e o samba. O álbum 'Tropicália ou Panis et Circencis' se tornou a pedra fundamental dessa estética que desafiou a ditadura e a tradição moralista da época."
+            },
+            {
+                id: 3,
+                title: "A Poesia Metafórica de Chico Buarque",
+                tag: "Resistência",
+                readTime: "6 min",
+                likes: 310,
+                snippet: "Como Chico venceu a censura utilizando alter egos e jogos de palavras geniais.",
+                fullText: "Com pseudônimos como Julinho da Adelaide, Chico Buarque burla a censura oficial dos anos 70. Canções como 'Cálice' (com Gil) e 'Apesar de Você' tornaram-se hinos de resistência com lirismo refinado e métrica impecável."
+            }
+        ];
+
+        const artistsData = [
+            { name: "Caetano Veloso", icon: "fa-guitar", era: "Tropicália" },
+            { name: "Elis Regina", icon: "fa-microphone-lines", era: "MPB 70" },
+            { name: "Chico Buarque", icon: "fa-pen-nib", era: "MPB Engajada" },
+            { name: "Gilberto Gil", icon: "fa-music", era: "Tropicália" },
+            { name: "Gal Costa", icon: "fa-record-vinyl", era: "Tropicália" },
+            { name: "Tom Jobim", icon: "fa-sliders", era: "Bossa Nova" }
+        ];
+
+        const audioPlaylist = [
+            { title: "Tom Jobim & Elis Regina - Águas de Março", chord: "Bm7(9) -> E7(13)" },
+            { title: "Caetano Veloso - Tropicália", chord: "A -> G/A -> D/A" },
+            { title: "Chico Buarque - Construção", chord: "Am -> Am/G -> F#m7(b5)" },
+            { title: "João Gilberto - Chega de Saudade", chord: "Dm7 -> G7 -> Cmaj7" }
+        ];
+
+        let currentTrackIndex = 0;
+        let isPlaying = false;
+
+        // --- SISTEMA DE ILUMINAÇÃO & TEMAS (Engine Crédito Maria Kustovichi) ---
+        function setTheme(mode) {
+            const body = document.getElementById('app-body');
+            const label = document.getElementById('theme-label');
+            const icon = document.getElementById('theme-icon');
+
+            // Resetar Classes
+            body.classList.remove('dark', 'stage-lighting-mode');
+
+            if (mode === 'light') {
+                label.innerText = "Modo Claro";
+                icon.className = "fa-solid fa-sun text-mpb-yellow";
+            } else if (mode === 'dark') {
+                body.classList.add('dark');
+                label.innerText = "Modo Escuro";
+                icon.className = "fa-solid fa-moon text-indigo-400";
+            } else if (mode === 'stage') {
+                body.classList.add('dark', 'stage-lighting-mode');
+                label.innerText = "Maria Kustovichi Stage";
+                icon.className = "fa-solid fa-compact-disc text-mpb-red animate-spin";
+            }
+
+            document.getElementById('theme-dropdown').classList.add('hidden');
+        }
+
+        function toggleThemeMenu() {
+            const dropdown = document.getElementById('theme-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        // --- CONTROLES DE ÁUDIO / PLAYER VINIL ---
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const vinyl = document.getElementById('vinyl-disk');
+            const toneArm = document.getElementById('tone-arm');
+            const playBtn = document.getElementById('play-btn');
+
+            if (isPlaying) {
+                vinyl.classList.remove('paused');
+                toneArm.style.transform = "rotate(28deg)";
+                playBtn.innerHTML = '<i class="fa-solid fa-pause text-sm"></i>';
+            } else {
+                vinyl.classList.add('paused');
+                toneArm.style.transform = "rotate(12deg)";
+                playBtn.innerHTML = '<i class="fa-solid fa-play text-sm"></i>';
+            }
+        }
+
+        function updatePlayerTrack() {
+            const track = audioPlaylist[currentTrackIndex];
+            document.getElementById('player-title').innerText = track.title;
+            document.getElementById('player-chord').innerText = `Acorde Atual: ${track.chord}`;
+        }
+
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % audioPlaylist.length;
+            updatePlayerTrack();
+        }
+
+        function prevTrack() {
+            currentTrackIndex = (currentTrackIndex - 1 + audioPlaylist.length) % audioPlaylist.length;
+            updatePlayerTrack();
+        }
+
+        // --- RENDERIZAÇÃO DA TIMELINE ---
+        function renderEras(filter = 'all') {
+            const container = document.getElementById('era-cards-container');
+            container.innerHTML = '';
+
+            const filtered = filter === 'all' ? eraData : eraData.filter(e => e.id === filter);
+
+            filtered.forEach(era => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 p-5 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full border ${era.badgeBg}">${era.years}</span>
+                        </div>
+                        <h3 class="text-lg font-serif font-bold text-gray-900 dark:text-white mb-2">${era.title}</h3>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">${era.desc}</p>
+                    </div>
+                    <div class="pt-3 border-t border-gray-100 dark:border-slate-700/60">
+                        <span class="block text-[10px] text-gray-400 font-semibold uppercase">Principais Nomes:</span>
+                        <span class="text-xs font-semibold text-mpb-red dark:text-mpb-yellow">${era.keyArtists}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterEra(eraId) {
+            document.querySelectorAll('.era-btn').forEach(btn => {
+                btn.classList.remove('bg-mpb-red', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-slate-800');
+            });
+            event.target.classList.remove('bg-gray-200', 'dark:bg-slate-800');
+            event.target.classList.add('bg-mpb-red', 'text-white');
+            
+            renderEras(eraId);
+        }
+
+        // --- RENDERIZAÇÃO DE ARTIGOS ---
+        function renderArticles() {
+            const grid = document.getElementById('articles-grid');
+            grid.innerHTML = '';
+
+            articlesData.forEach(art => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+                            <span class="text-mpb-red font-bold uppercase tracking-wider">${art.tag}</span>
+                            <span><i class="fa-regular fa-clock"></i> ${art.readTime}</span>
+                        </div>
+                        <h3 class="text-lg font-bold font-serif text-gray-900 dark:text-white mb-2 hover:text-mpb-red transition-colors cursor-pointer" onclick="openModal(${art.id})">${art.title}</h3>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-4">${art.snippet}</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-slate-700">
+                        <button onclick="likeArticle(${art.id}, this)" class="text-xs text-gray-400 hover:text-mpb-red flex items-center gap-1">
+                            <i class="fa-regular fa-heart"></i> <span>${art.likes}</span>
+                        </button>
+                        <button onclick="openModal(${art.id})" class="text-xs font-bold text-mpb-red hover:underline flex items-center gap-1">
+                            Ler Mais <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function likeArticle(id, btn) {
+            const art = articlesData.find(a => a.id === id);
+            if (art) {
+                art.likes++;
+                btn.querySelector('span').innerText = art.likes;
+                btn.querySelector('i').className = "fa-solid fa-heart text-mpb-red";
+            }
+        }
+
+        function openModal(id) {
+            const art = articlesData.find(a => a.id === id);
+            if (!art) return;
+
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <span class="text-xs font-bold uppercase text-mpb-red tracking-wider">${art.tag}</span>
+                <h2 class="text-2xl font-serif font-bold text-gray-900 dark:text-white mt-1 mb-4">${art.title}</h2>
+                <div class="text-xs text-gray-400 mb-6 flex items-center gap-4">
+                    <span>Tempo de Leitura: ${art.readTime}</span>
+                    <span>•</span>
+                    <span>Curtidas: ${art.likes}</span>
+                </div>
+                <div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed space-y-4 border-t border-gray-100 dark:border-slate-800 pt-4">
+                    <p>${art.fullText}</p>
+                </div>
+            `;
+            document.getElementById('article-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('article-modal').classList.add('hidden');
+        }
+
+        // --- RENDERIZAÇÃO ARTISTAS ---
+        function renderArtists() {
+            const grid = document.getElementById('artists-grid');
+            grid.innerHTML = '';
+
+            artistsData.forEach(artist => {
+                const item = document.createElement('div');
+                item.className = "bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-4 text-center hover:border-mpb-red transition-all cursor-pointer group";
+                item.innerHTML = `
+                    <div class="w-12 h-12 rounded-full bg-mpb-red/10 text-mpb-red group-hover:bg-mpb-red group-hover:text-white transition-colors mx-auto flex items-center justify-center text-lg mb-2">
+                        <i class="fa-solid ${artist.icon}"></i>
+                    </div>
+                    <span class="block text-xs font-bold text-gray-900 dark:text-white truncate">${artist.name}</span>
+                    <span class="text-[10px] text-gray-400">${artist.era}</span>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        // --- CONTROLE DE ABAS DO VS CODE ---
+        function switchTab(tabName) {
+            document.querySelectorAll('.code-tab').forEach(tab => {
+                tab.classList.remove('bg-[#1e1e1e]', 'text-white', 'border-t-2', 'border-mpb-red');
+                tab.classList.add('bg-[#2d2d2d]', 'text-gray-400');
+            });
+
+            document.getElementById(`tab-${tabName}`).classList.remove('bg-[#2d2d2d]', 'text-gray-400');
+            document.getElementById(`tab-${tabName}`).classList.add('bg-[#1e1e1e]', 'text-white', 'border-t-2', 'border-mpb-red');
+
+            document.getElementById('code-sambaBeat').classList.add('hidden');
+            document.getElementById('code-harmonyGen').classList.add('hidden');
+            document.getElementById(`code-${tabName}`).classList.remove('hidden');
+        }
+
+        function copyCode() {
+            const visibleCode = document.querySelector('pre:not(.hidden) code').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = visibleCode;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            
+            alert('Código VS Code copiado para a área de transferência!');
+        }
+
+        // --- QUIZ LOGIC ---
+        function answerQuiz(option) {
+            const container = document.getElementById('quiz-container');
+            const result = document.getElementById('quiz-result');
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+
+            container.classList.add('hidden');
+            result.classList.remove('hidden');
+
+            if (option === 'bossa') {
+                title.innerText = "Sua Era é: Bossa Nova!";
+                desc.innerText = "Sua alma busca a calmaria do violão de João Gilberto e o lirismo da Zona Sul carioca dos anos 50/60.";
+            } else if (option === 'tropicalia') {
+                title.innerText = "Sua Era é: Tropicália!";
+                desc.innerText = "Você ama misturas ousadas, arte psicodélica, guitarras distorcidas e o espírito livre de Caetano e Gal!";
+            } else {
+                title.innerText = "Sua Era é: MPB Engajada & Protesto!";
+                desc.innerText = "Você aprecia a profundidade poética de Chico Buarque e a força interpretativa de Elis Regina nos anos 70.";
+            }
+        }
+
+        function resetQuiz() {
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+        }
+
+        // --- CANVAS DE ONDAS SONORAS E PARTÍCULAS ---
+        function initCanvas() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let step = 0;
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                step += 0.02;
+
+                ctx.beginPath();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = 'rgba(229, 62, 62, 0.15)'; // Cor Vermelho MPB sutil
+
+                for (let x = 0; x < canvas.width; x += 10) {
+                    const y = Math.sin(x * 0.005 + step) * 30 + Math.cos(x * 0.01 + step) * 20 + canvas.height / 2;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        // --- INICIALIZAÇÃO DA PÁGINA ---
+        window.onload = function() {
+            renderEras();
+            renderArticles();
+            renderArtists();
+            initCanvas();
+            setTheme('stage'); // Inicia por padrão no Modo Palco Maria Kustovichi
+        };
+    </script>
+</body>
+</html>
